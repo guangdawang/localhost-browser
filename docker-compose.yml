@@ -1,0 +1,71 @@
+name: browser-project
+
+services:
+  localhost-browser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: localhost-browser:latest
+    container_name: localhost-browser-app
+    
+    # 网络模式设置为host，方便访问本地服务
+    network_mode: host
+    
+    # 环境变量
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
+      - XDG_RUNTIME_DIR=/tmp/runtime
+    
+    # 卷挂载
+    volumes:
+      # X11 socket（用于Linux GUI应用）
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - /tmp/runtime:/tmp/runtime
+      # 配置文件
+      - ./config:/app/config
+      # 日志
+      - ./logs:/app/logs
+    
+    # 端口映射（如果不用host网络模式）
+    ports:
+      - "3000:3000"
+    
+    # 命令行参数
+    command: ["3000", "--dev"]
+    
+    # 重启策略
+    restart: unless-stopped
+    
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "localhost-browser"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # 可选：简单的HTTP测试服务器
+  test-server:
+    image: nginx:alpine
+    container_name: localhost-test-server
+    ports:
+      - "3000:80"
+    volumes:
+      - ./test-content:/usr/share/nginx/html:ro
+    profiles:
+      - test
+
+volumes:
+  config:
+  logs:

@@ -1,0 +1,32 @@
+[package]
+name = "localhost-browser"
+version = "0.1.0"
+edition = "2021"
+authors = ["王广成 Guang-Dawang@outlook.com"]
+description = "仅支持Localhost的高性能浏览器"
+license = "MIT"
+repository = "https://github.com/guangdawang/localhost-browser"
+
+[features]
+default = []
+dev = ["wry/devtools"]
+
+[dependencies]
+wry = { version = "0.28", features = [] }
+tokio = { version = "1.0", features = ["full"] }
+clap = { version = "3.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+url = "2.2"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
