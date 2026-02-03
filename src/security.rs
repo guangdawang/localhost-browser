@@ -1,7 +1,8 @@
 use url::Url;
 use std::net::IpAddr;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityPolicy {
     pub allow_localhost: bool,
     pub allow_loopback: bool,

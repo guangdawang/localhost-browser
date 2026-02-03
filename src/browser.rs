@@ -33,46 +33,20 @@ impl Browser {
     }
 
     pub async fn run(self) -> Result<(), wry::Error> {
-        let url = format!("http://localhost:{}", self.config.port);
+        let Browser {
+            event_loop,
+            window,
+            config,
+        } = self;
+
+        let url = format!("http://localhost:{}", config.port);
         println!("🚀 启动浏览器，访问: {}", url);
 
-        let security_filter = SecurityFilter::new(&self.config.security_policy);
-        
-        let _webview = WebViewBuilder::new(self.window)?
-            .with_url(&url)?
-            .with_ipc_handler(move |req: String| {
-                if !security_filter.is_allowed(&req) {
-                    println!("🚫 拦截请求: {}", req);
-                    return "".to_string();
-                }
-                req
-            })
-            .with_initialization_script(&self.get_init_script())
-            .with_devtools(self.config.enable_devtools)
-            .with_transparent(false)
-            .build()?;
-
-        self.event_loop.run(move |event, _, control_flow| {
-            *control_flow = ControlFlow::Wait;
-
-            match event {
-                Event::WindowEvent {
-                    event: WindowEvent::CloseRequested,
-                    ..
-                } => {
-                    println!("👋 关闭浏览器");
-                    *control_flow = ControlFlow::Exit;
-                }
-                Event::MainEventsCleared => {
-                }
-                _ => {}
-            }
-        });
-    }
-
-    fn get_init_script(&self) -> String {
-        format!(
-            r#"
+        let security_filter = SecurityFilter::new(&config.security_policy);
+        let init_script = {
+            let port = config.port;
+            format!(
+                r#"
             window.__LOCALHOST_BROWSER = {{
                 version: "1.0",
                 port: {},
@@ -97,7 +71,37 @@ impl Browser {
             
             console.log('🔒 本地浏览器安全模式已启用');
             "#,
-            self.config.port
-        )
+                port
+            )
+        };
+
+        let _webview = WebViewBuilder::new(window)?
+            .with_url(&url)?
+            .with_ipc_handler(move |_window, req: String| {
+                if !security_filter.is_allowed(&req) {
+                    println!("🚫 拦截请求: {}", req);
+                }
+            })
+            .with_initialization_script(&init_script)
+            .with_devtools(config.enable_devtools)
+            .with_transparent(false)
+            .build()?;
+
+        event_loop.run(move |event, _, control_flow| {
+            *control_flow = ControlFlow::Wait;
+
+            match event {
+                Event::WindowEvent {
+                    event: WindowEvent::CloseRequested,
+                    ..
+                } => {
+                    println!("👋 关闭浏览器");
+                    *control_flow = ControlFlow::Exit;
+                }
+                Event::MainEventsCleared => {
+                }
+                _ => {}
+            }
+        });
     }
 }

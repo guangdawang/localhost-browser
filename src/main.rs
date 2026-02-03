@@ -18,22 +18,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .get_matches();
 
     // 创建配置
+    let port = matches.value_of("PORT").unwrap().parse::<u16>()
+        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
     let config = BrowserConfig {
-        port: matches.value_of("PORT").unwrap().parse()?,
+        port,
         enable_devtools: matches.is_present("dev"),
-        window_title: format!("Localhost:{}", matches.value_of("PORT").unwrap()),
+        window_title: format!("Localhost:{}", port),
         window_size: (1024, 768),
         security_policy: SecurityPolicy::default(),
+        config_path: None,
     };
 
     // 启动浏览器
     let browser = Browser::new(config)?;
     browser.run().await
+        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
 }
 
 fn validate_port(port: &str) -> Result<(), String> {
     match port.parse::<u16>() {
-        Ok(p) if p > 0 && p < 65536 => Ok(()),
+        Ok(p) if p > 0 => Ok(()),
         _ => Err("端口必须在1-65535之间".into()),
     }
 }
