@@ -1,4 +1,94 @@
+# ========== Rust 通用 ==========
 /target/
 **/*.rs.bk
-Cargo.lock
+
+# ========== 构建产物 ==========
+*.exe
+*.so
+*.dylib
+*.dll
+*.lib
+*.a
+*.o
+*.obj
+*.pdb
+*.idb
+*.ilk
+
+# ========== 开发环境 ==========
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
+Thumbs.db
+
+# ========== 临时文件 ==========
+*.tmp
+*.temp
+/tmp/
+/temp/
+
+# ========== 日志文件 ==========
+*.log
+/logs/
+/log/
+
+# ========== 配置（本地） ==========
+config.local.json
+.env
+.env.local
+.local.env
+
+# ========== 操作系统特定 ==========
+# Windows
+*.suo
+*.user
+*.sln
+
+# macOS
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*.AppImage
+*.app
+
+# ========== 文档 ==========
+/doc/
+/docs/book/
+
+# ========== 测试相关 ==========
+coverage/
+*.profraw
+
+# ========== 包管理 ==========
+# 如果这是库项目，取消下面注释
+# Cargo.lock
+
+# ========== 项目特定 ==========
+# 如果你的 assets 包含生成的资源
+# /assets/generated/
+# /assets/compressed/
+
+# 如果你的 assets 包含开发资源但不应提交
+# /assets/development/
+# /assets/*.psd
+# /assets/*.ai
+
+# ========== 性能测试数据 ==========
+target/criterion/
+benches/output/
+benches/*.csv
+benches/*.json
+
+# ========== 预提交钩子 ==========
+.git/hooks/*.sample
+.git/hooks/pre-commit
+.git/hooks/pre-push
+
+# ========== IDE 缓存 ==========
+.rust-analyzer/
+.cache/

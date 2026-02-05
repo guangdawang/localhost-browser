@@ -1,29 +1,25 @@
+// build.rs
+use slint_build::compile_with_config;
+use slint_build::CompilerConfiguration;
+
 fn main() {
-    #[cfg(target_os = "windows")]
-    {
-        let mut res = winres::WindowsResource::new();
-        res.set_manifest(r#"
-            <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-                <dependency>
-                    <dependentAssembly>
-                        <assemblyIdentity
-                            type="win32"
-                            name="Microsoft.Windows.Common-Controls"
-                            version="6.0.0.0"
-                            processorArchitecture="*"
-                            publicKeyToken="6595b64144ccf1df"
-                            language="*"
-                        />
-                    </dependentAssembly>
-                </dependency>
-                <application xmlns="urn:schemas-microsoft-com:asm.v3">
-                    <windowsSettings>
-                        <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
-                        <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware>
-                    </windowsSettings>
-                </application>
-            </assembly>
-           "#);
-        res.compile().unwrap();
+    // 配置Slint编译器
+    let config = CompilerConfiguration::new()
+        .with_style("fluent".into()) // 使用Fluent风格
+        .embed_resources(slint_build::EmbedResourcesKind::EmbedForSoftwareRenderer);
+
+    // 编译UI文件
+    compile_with_config("src/ui.slint", config).unwrap();
+
+    // 复制资源文件
+    println!("cargo:rerun-if-changed=src/ui.slint");
+    println!("cargo:rerun-if-changed=assets/");
+
+    // Windows特定设置
+    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows" {
+        // 设置Windows子系统
+        println!("cargo:rustc-link-arg=/SUBSYSTEM:WINDOWS");
+        // 设置入口点（如果使用WinMain）
+        println!("cargo:rustc-link-arg=/ENTRY:mainCRTStartup");
     }
 }

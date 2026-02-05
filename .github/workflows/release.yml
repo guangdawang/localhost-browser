@@ -1,0 +1,80 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v*.*.*"
+
+jobs:
+    build-release:
+        name: Build Release (${{ matrix.os }})
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Rust
+              uses: dtolnay/rust-toolchain@stable
+
+            - name: Cache Cargo
+              uses: Swatinem/rust-cache@v2
+
+            - name: Build (release)
+              run: cargo build --release --verbose
+
+            - name: Package (Linux/macOS)
+              if: runner.os != 'Windows'
+              id: package_nix
+              env:
+                  BIN_NAME: port-browser
+              run: |
+                  set -e
+                  OUT_NAME="${BIN_NAME}-${{ runner.os }}-${{ github.ref_name }}.tar.gz"
+                  tar -czf "$OUT_NAME" -C target/release "$BIN_NAME"
+                  echo "out_name=$OUT_NAME" >> $GITHUB_OUTPUT
+
+            - name: Package (Windows)
+              if: runner.os == 'Windows'
+              id: package_win
+              env:
+                  BIN_NAME: port-browser.exe
+              shell: pwsh
+              run: |
+                  $outName = "$env:BIN_NAME-$env:RUNNER_OS-$env:GITHUB_REF_NAME.zip"
+                  Compress-Archive -Path "target/release/$env:BIN_NAME" -DestinationPath $outName
+                  "out_name=$outName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+            - name: Upload artifact (Linux/macOS)
+              if: runner.os != 'Windows'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ runner.os }}-release
+                  path: ${{ steps.package_nix.outputs.out_name }}
+
+            - name: Upload artifact (Windows)
+              if: runner.os == 'Windows'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ runner.os }}-release
+                  path: ${{ steps.package_win.outputs.out_name }}
+
+    publish:
+        name: Publish Release
+        needs: build-release
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Download artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  path: dist
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  files: dist/**

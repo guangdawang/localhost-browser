@@ -1,0 +1,31 @@
+[target.x86_64-pc-windows-msvc]
+rustflags = [
+    "-C", "target-cpu=native",
+    "-C", "link-arg=/OPT:REF",
+    "-C", "link-arg=/OPT:ICF",
+    "-C", "link-arg=/DEBUG:NONE",
+]
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "target-cpu=native",
+    "-C", "link-args=-Wl,--gc-sections",
+    "-C", "link-args=-Wl,--strip-all",
+]
+
+[target.x86_64-apple-darwin]
+rustflags = [
+    "-C", "target-cpu=native",
+    "-C", "link-args=-Wl,-dead_strip",
+]
+
+[build]
+# 使用 mold 链接器（Linux，性能更好）
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+# 并行编译
+jobs = 8
+
+# 增量编译（开发时）
+[profile.dev]
+incremental = true

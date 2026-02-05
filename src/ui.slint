@@ -1,0 +1,264 @@
+// ========== UI定义文件 ==========
+
+// 导入标准组件库
+import { GroupBox, CheckBox, SpinBox, LineEdit, Button, ProgressIndicator } from "std-widgets.slint";
+
+// 主题切换组件
+component ThemeToggle {
+    in property <string> current-theme: "system";
+    callback theme-changed(string);
+    
+    HorizontalLayout {
+        spacing: 10px;
+        
+        Button {
+            text: "浅色";
+            enabled: current-theme != "light";
+            clicked => { theme-changed("light"); }
+        }
+        
+        Button {
+            text: "深色";
+            enabled: current-theme != "dark";
+            clicked => { theme-changed("dark"); }
+        }
+        
+        Button {
+            text: "系统";
+            enabled: current-theme != "system";
+            clicked => { theme-changed("system"); }
+        }
+    }
+}
+
+// 主窗口组件
+export component MainWindow inherits Window {
+    // ========== 属性 ==========
+    in property <string> window-title;
+    in property <int> window-width;
+    in property <int> window-height;
+    
+    in-out property <bool> use-default-port: true;
+    in property <int> default-port: 8080;
+    in-out property <bool> auto-launch: false;
+    in-out property <bool> auto-close: false;
+    
+    in property <[string]> recent-ports;
+    in property <[string]> quick-ports;
+    
+    // 状态属性
+    in-out property <string> port-input: "8080";
+    in property <bool> is-port-valid: true;
+    in property <string> port-validation-message: "";
+    in-out property <string> status-message: "就绪";
+    in-out property <bool> is-launching: false;
+    in-out property <string> current-theme: "system";
+    
+    // ========== 回调 ==========
+    callback validate-port-input(string);
+    callback launch-browser(string, bool, bool);
+    callback quick-port-selected(string);
+    callback save-config();
+    callback window-resized(int, int);
+    
+    // ========== UI布局 ==========
+    VerticalLayout {
+        spacing: 12px;
+        padding: 20px;
+        
+        // 标题
+        Text {
+            text: "🚀 高性能端口浏览器";
+            font-size: 24px;
+            font-weight: 700;
+            horizontal-alignment: center;
+            color: #2563eb;
+        }
+        
+        // 端口配置区域
+        GroupBox {
+            title: "端口配置";
+            
+            VerticalLayout {
+                spacing: 10px;
+                
+                // 默认端口选项
+                HorizontalLayout {
+                    alignment: start;
+                    spacing: 10px;
+                    
+                    CheckBox {
+                        text: "使用默认端口 (localhost)";
+                        checked: root.use-default-port;
+                        toggled => {
+                            root.use-default-port = self.checked;
+                        }
+                    }
+                    
+                    SpinBox {
+                        visible: !root.use-default-port;
+                        minimum: 1;
+                        maximum: 65535;
+                        value: root.default-port;
+                        width: 100px;
+                    }
+                }
+                
+                // 自定义端口输入
+                GroupBox {
+                    title: "自定义端口";
+                    visible: !root.use-default-port;
+                    
+                    VerticalLayout {
+                        spacing: 8px;
+                        
+                        HorizontalLayout {
+                            Text {
+                                text: "端口号:";
+                                width: 80px;
+                            }
+                            
+                            LineEdit {
+                                text: root.port-input;
+                                placeholder-text: "输入 1-65535";
+                                width: 150px;
+                                
+                                edited => {
+                                    root.port-input = self.text;
+                                    root.validate-port-input(self.text);
+                                }
+                            }
+                        }
+                        
+                        // 验证信息
+                        Text {
+                            text: root.port-validation-message;
+                            color: root.is-port-valid ? #10b981 : #ef4444;
+                            font-size: 12px;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 快捷端口
+        GroupBox {
+            title: "快捷端口";
+            visible: root.quick-ports.length > 0;
+            
+            HorizontalLayout {
+                spacing: 8px;
+                
+                for port in root.quick-ports : Button {
+                    text: port;
+                    width: 60px;
+                    clicked => {
+                        root.quick-port-selected(port);
+                    }
+                }
+            }
+        }
+        
+        // 最近使用
+        GroupBox {
+            title: "最近使用";
+            visible: root.recent-ports.length > 0;
+            
+            VerticalLayout {
+                for data in root.recent-ports : HorizontalLayout {
+                    spacing: 10px;
+                    height: 30px;
+                    
+                    Text {
+                        text: "● " + data;
+                        vertical-alignment: center;
+                    }
+                    
+                    Button {
+                        text: "打开";
+                        width: 50px;
+                        clicked => {
+                            root.quick-port-selected(data);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 选项
+        GroupBox {
+            title: "选项";
+            
+            VerticalLayout {
+                spacing: 8px;
+                
+                CheckBox {
+                    text: "自动启动浏览器";
+                    checked: root.auto-launch;
+                }
+                
+                CheckBox {
+                    text: "启动后自动关闭窗口";
+                    checked: root.auto-close;
+                }
+
+                ThemeToggle {
+                    current-theme: root.current-theme;
+                    theme-changed(theme) => {
+                        root.current-theme = theme;
+                        root.status-message = "主题已切换: " + theme;
+                    }
+                }
+            }
+        }
+        
+        // 状态区域
+        GroupBox {
+            title: "状态";
+            
+            VerticalLayout {
+                Text {
+                    text: root.status-message;
+                    wrap: word-wrap;
+                }
+                
+                ProgressIndicator {
+                    visible: root.is-launching;
+                    indeterminate: true;
+                }
+            }
+        }
+        
+        // 操作按钮
+        HorizontalLayout {
+            alignment: center;
+            spacing: 20px;
+            
+            Button {
+                text: "🚀 启动浏览器";
+                enabled: root.use-default-port || root.is-port-valid;
+                width: 150px;
+                
+                clicked => {
+                    root.is-launching = true;
+                    root.launch-browser(root.port-input, root.use-default-port, root.auto-close);
+                }
+            }
+            
+            Button {
+                text: "💾 保存配置";
+                width: 100px;
+                clicked => {
+                    root.save-config();
+                    root.status-message = "配置已保存";
+                }
+            }
+        }
+    }
+    
+    // ========== 窗口属性 ==========
+    width: root.window-width * 1px;
+    height: root.window-height * 1px;
+    title: root.window-title;
+}
+
