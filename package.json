@@ -1,0 +1,41 @@
+{
+  "name": "local-dev-browser",
+  "version": "1.0.0",
+  "description": "专为本地开发设计的浏览器，快速访问 localhost 及常用端口",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": [
+    "electron",
+    "browser",
+    "localhost",
+    "developer-tools"
+  ],
+  "author": "Guang Dawang",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^40.4.1",
+    "electron-builder": "^26.7.0"
+  },
+  "build": {
+    "appId": "com.guangdawang.localdevbrowser",
+    "productName": "Local Dev Browser",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icon.png"
+    }
+  }
+}

@@ -1,43 +1,43 @@
-# 高性能端口浏览器
+# localhost-browser
 
-一个轻量的本地端口启动器，帮助你一键打开 `http://localhost:<port>`，并提供常用端口与最近记录。
+一个基于 Electron 的本地浏览器项目。
 
-## 功能
+## 项目简介
 
-- 一键打开本地端口地址
-- 端口输入校验
-- 常用端口与最近端口列表
-- 自动启动与启动后自动关闭
-- 简洁的桌面 GUI
+本项目旨在提供一个简洁的本地浏览器，支持基本的网页浏览功能，适合学习和二次开发。
 
-## 环境要求
+## 目录结构
 
-- Rust 1.70+（建议最新稳定版）
-- Windows / macOS / Linux
+- `dashboard.html`：主界面 HTML 文件
+- `main.js`：Electron 主进程脚本
+- `preload.js`：预加载脚本
+- `package.json`：项目配置文件
 
-## 构建与运行
+## 安装与运行
 
-```bash
-# 开发版
-cargo build
-cargo run
+1. 安装依赖：
 
-# 发布版
-cargo build --release
-```
+   ```bash
+   npm install
 
-发布版可执行文件位于：
+   ```
 
-```bash
-./target/release/port-browser
-```
+2. 启动项目：
 
-Windows 下为 `port-browser.exe`。
+   ```bash
+   npm start
+   ```
 
-## 配置
+## 主要功能
 
-应用会在用户配置目录中保存配置（默认端口、窗口尺寸等）。
+- 加载本地 HTML 页面
+- 支持基本的网页浏览
+- 可扩展性强，适合自定义开发
+
+## 开发
+
+如需自定义功能，可修改 `main.js` 和 `preload.js` 文件。
 
 ## 许可证
 
-MIT
+MIT License
